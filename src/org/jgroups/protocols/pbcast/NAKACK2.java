@@ -5,6 +5,7 @@ import org.jgroups.annotations.*;
 import org.jgroups.protocols.TCP;
 import org.jgroups.protocols.TP;
 import org.jgroups.stack.DiagnosticsHandler;
+import org.jgroups.stack.IpAddress;
 import org.jgroups.stack.Protocol;
 import org.jgroups.util.*;
 
@@ -726,11 +727,29 @@ public class NAKACK2 extends Protocol implements DiagnosticsHandler.ProbeHandler
         if(leaving)
             return;
         if(log_discard_msgs && log.isWarnEnabled()) {
-            if(suppress_log_non_member != null)
+            if(suppress_log_non_member != null) {
                 suppress_log_non_member.log(SuppressLog.Level.warn, sender, suppress_time_non_member_warnings,
-                                            local_addr, message, sender, view);
-            else
+                        local_addr, message, sender, view);
+            } else {
                 log.warn(Util.getMessage("MsgDroppedNak"), local_addr, message, sender, view);
+                log.warn("unknown sender: " + formatAddressToString(sender) + "\n");
+
+                xmit_table.keySet().forEach(address -> {
+                    log.warn(" - known address: " + formatAddressToString(address));
+                });
+            }
+        }
+    }
+
+    private String formatAddressToString(Address address) {
+        if (address instanceof IpAddress) {
+            IpAddress ip = (IpAddress) address;
+            return String.format("IP address is '%s' port is '%s'.",
+                    ip.printIpAddress(), ip.getPort() + "");
+        } else if (address instanceof PhysicalAddress) {
+            return String.format("physical address is '%s'.", ((PhysicalAddress) address).printIpAddress());
+        } else {
+            return address.toString();
         }
     }
 

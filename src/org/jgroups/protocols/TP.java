@@ -1,6 +1,7 @@
 package org.jgroups.protocols;
 
 
+import org.apache.logging.log4j.util.Strings;
 import org.jgroups.*;
 import org.jgroups.annotations.*;
 import org.jgroups.blocks.LazyRemovalCache;
@@ -23,6 +24,8 @@ import java.net.SocketException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 
 /**
@@ -1479,6 +1482,14 @@ public abstract class TP extends Protocol implements DiagnosticsHandler.ProbeHan
                     }
                 }
                 log.warn(Util.getMessage("PhysicalAddrMissing"), local_addr, dest);
+
+                for (PingData data: responses) {
+                    log.warn(" - rejected candidate; name = '%s', logical = '%s', physical = '%s'." +
+                            data.getLogicalName(),
+                            data.getAddress().toString(),
+                            data.getPhysicalAddr().printIpAddress()
+                    );
+                }
             }
             finally {
                 responses.done();
